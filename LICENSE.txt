@@ -1,0 +1,4 @@
+Copyright (c) 2026 Edson Dario Toledo Gonzalez
+
+All rights reserved.
+This code is for viewing purposes only. No permission is granted to use, copy, modify, or distribute.
