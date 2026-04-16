@@ -1,9 +1,8 @@
-package handlers
+package expenses
 
 import (
 	"net/http"
 
-	"github.com/edsontoledo-g/group-expense-api/internal/models/dto"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,8 +10,8 @@ type ExpensesHandler struct{}
 
 func (_ *ExpensesHandler) GetExpensesHandler(c *gin.Context) {
 	// TODO: Implement
-	expenseList := dto.ExpenseListResponse{
-		Expenses: []dto.ExpenseResponse{
+	expenseList := ExpenseListResponse{
+		Expenses: []ExpenseResponse{
 			{
 				Id:          "xxx",
 				Name:        "Test",
@@ -27,7 +26,7 @@ func (_ *ExpensesHandler) GetExpensesHandler(c *gin.Context) {
 }
 
 func (_ *ExpensesHandler) CreateExpenseHandler(c *gin.Context) {
-	var expense dto.ExpenseRequest
+	var expense ExpenseRequest
 	if err := c.ShouldBindJSON(&expense); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),

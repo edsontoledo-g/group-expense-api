@@ -1,4 +1,4 @@
-package models
+package expenses
 
 type Expense struct {
 	Id          string
