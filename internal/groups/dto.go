@@ -1,6 +1,8 @@
 package groups
 
 import (
+	"time"
+
 	"github.com/edsontoledo-g/group-expense-api/internal/expenses"
 	"github.com/edsontoledo-g/group-expense-api/internal/users"
 )
@@ -25,4 +27,5 @@ type GroupResponse struct {
 	Description *string                     `json:"description,omitempty"`
 	Users       []users.UserResponse        `json:"users"`
 	Expenses    *[]expenses.ExpenseResponse `json:"expenses,omitempty"`
+	CreatedAt   time.Time
 }

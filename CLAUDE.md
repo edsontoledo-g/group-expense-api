@@ -26,7 +26,7 @@ go mod tidy
 
 ## Architecture
 
-This is a Go REST API built with [Gin](https://github.com/gin-gonic/gin) and MongoDB (`go.mongodb.org/mongo-driver/v2`). The entry point is `cmd/api/main.go`.
+This is a Go REST API built with [Gin](https://github.com/gin-gonic/gin) and PostgreSQL (`https://github.com/jackc/pgx`). The entry point is `cmd/api/main.go`.
 
 All API routes are prefixed `/api/v1`. The `/api/v1` group is created in `main.go` and passed to each feature's `RegisterRoutes` function.
 
