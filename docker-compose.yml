@@ -1,0 +1,24 @@
+services:
+  db:
+    image: postgres:16
+    container_name: group_expenses_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  api:
+    build: .
+    container_name: group_expenses_api
+    depends_on:
+      - db
+    environment:
+      DB_URL: ${DB_URL}
+    ports:
+      - "8080:8080"
+volumes:
+  postgres_data:
