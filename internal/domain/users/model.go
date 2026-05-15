@@ -3,8 +3,7 @@ package users
 import "time"
 
 type User struct {
-	ID         string
-	UserName   string
+	ID         uint
 	FirstName  string
 	LastName   string
 	Email      string

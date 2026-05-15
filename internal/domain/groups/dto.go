@@ -3,8 +3,8 @@ package groups
 import (
 	"time"
 
-	"github.com/edsontoledo-g/group-expense-api/internal/expenses"
-	"github.com/edsontoledo-g/group-expense-api/internal/users"
+	"github.com/edsontoledo-g/group-expense-api/internal/domain/expenses"
+	"github.com/edsontoledo-g/group-expense-api/internal/domain/users"
 )
 
 type GroupRequest struct {
@@ -17,7 +17,7 @@ type GroupInviteRequest struct {
 	Token string `json:"token"`
 }
 
-type GroupResponseList struct {
+type GroupListResponse struct {
 	Groups []GroupResponse `json:"groups"`
 }
 

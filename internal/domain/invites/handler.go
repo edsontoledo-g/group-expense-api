@@ -7,3 +7,7 @@ type InvitesHandler struct{}
 func (_ *InvitesHandler) AcceptInvite(c *gin.Context) {
 
 }
+
+func NewInvitesHandler() *InvitesHandler {
+	return &InvitesHandler{}
+}

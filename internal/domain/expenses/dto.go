@@ -20,6 +20,6 @@ type ExpenseResponse struct {
 	Description *string    `json:"description,omitempty"`
 	Amount      float32    `json:"amount"`
 	Date        *time.Time `json:"date,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
+	CreatedAt   time.Time  `json:"createdAt"`
 	Category    string     `json:"category"`
 }
