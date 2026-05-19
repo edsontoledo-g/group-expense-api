@@ -10,3 +10,7 @@ func (_ *UserHandler) GetInformation(c *gin.Context) {
 func (_ *UserHandler) ArchiveGroup(c *gin.Context) {
 
 }
+
+func NewUserHandler() *UserHandler {
+	return &UserHandler{}
+}
