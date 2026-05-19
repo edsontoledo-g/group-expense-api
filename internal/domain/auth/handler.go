@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,11 +26,11 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	}
 	err := h.s.SignUp(input)
 	if err != nil {
-		switch err {
-		case ErrUserAlreadyExists:
+		switch {
+		case errors.Is(err, ErrUserAlreadyExists):
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "an unexpected error occurred"})
 		}
 		return
 	}
@@ -51,7 +52,14 @@ func (h *AuthHandler) SignIn(c *gin.Context) {
 	}
 	result, err := h.s.SignIn(input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		switch {
+		case errors.Is(err, ErrInvalidCredentials):
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		case errors.Is(err, ErrAccountNotVerified):
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "an unexpected error occurred"})
+		}
 		return
 	}
 	res := AuthResponse{

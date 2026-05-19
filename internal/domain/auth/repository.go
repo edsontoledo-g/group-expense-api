@@ -2,10 +2,12 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/edsontoledo-g/group-expense-api/internal/domain/users"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -41,6 +43,10 @@ func (repo *authRepository) CreateUser(user *users.User, auth *AuthProvider) err
 	`
 	err = tx.QueryRow(ctx, query, gs).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.IsVerified)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return ErrUserAlreadyExists
+		}
 		return err
 	}
 	auth.UserID = user.ID
@@ -110,6 +116,9 @@ func (repo *authRepository) GetUserByUserID(id uint) (*users.User, error) {
 		&user.IsVerified,
 	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
 		return nil, err
 	}
 	return user, nil
@@ -124,6 +133,9 @@ func (repo *authRepository) GetAuthByEmail(email string) (*AuthProvider, error) 
 	var userID uint
 	err := repo.pool.QueryRow(ctx, query, gs).Scan(&userID)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
 		return nil, err
 	}
 	authProvider, err := repo.getAuthByUserID(userID, ctx)
@@ -157,6 +169,9 @@ func (repo *authRepository) GetUserByVerificationToken(tokenHash string) (*users
 		&auth.CreatedAt,
 	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil, ErrInvalidVerificationToken
+		}
 		return nil, nil, err
 	}
 	user, err := repo.GetUserByUserID(auth.UserID)
@@ -226,6 +241,9 @@ func (repo *authRepository) getAuthByUserID(userID uint, ctx context.Context) (*
 		&authProvider.CreatedAt,
 	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
 		return nil, err
 	}
 	return authProvider, nil
