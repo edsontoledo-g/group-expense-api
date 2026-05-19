@@ -51,7 +51,7 @@ func (h *AuthHandler) SignIn(c *gin.Context) {
 	}
 	result, err := h.s.SignIn(input)
 	if err != nil {
-		// Trow error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	res := AuthResponse{
@@ -68,7 +68,7 @@ func (h *AuthHandler) SignInWithApple(c *gin.Context) {
 
 // TODO: Move HTML content to a template and use redirect
 func (h *AuthHandler) Verify(c *gin.Context) {
-	token := c.Param("token")
+	token := c.Query("token")
 	err := h.s.VerifyUserEmail(token)
 	if err != nil {
 		h.returnHTMLResult(c, false, "The verification link is invalid or has expired")

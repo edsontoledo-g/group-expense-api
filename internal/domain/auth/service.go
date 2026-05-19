@@ -50,8 +50,8 @@ func (s *authService) SignUp(input *AuthInput) error {
 		return err
 	}
 	user := &users.User{
-		FirstName: *input.FirstName,
-		LastName:  *input.LastName,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
 		Email:     input.Email,
 	}
 	auth := &AuthProvider{
@@ -68,7 +68,7 @@ func (s *authService) SignUp(input *AuthInput) error {
 	// TODO: Refactor hardcoded URL
 	verifyURL := fmt.Sprintf(
 		"http://localhost:8080/api/v1/auth/verify?token=%s",
-		token,
+		token.Token,
 	)
 	err = s.mailing.SendVerificationEmail(user.Email, verifyURL)
 	return err
@@ -85,6 +85,13 @@ func (s *authService) SignIn(input *AuthInput) (*AuthResult, error) {
 	)
 	if err != nil {
 		return nil, err
+	}
+	user, err := s.repo.GetUserByUserID(auth.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if user.IsVerified == false {
+		return nil, ErrAccountNotVerified
 	}
 	token, err := s.tokens.GenerateJWT(auth.UserID)
 	if err != nil {

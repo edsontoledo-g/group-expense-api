@@ -12,6 +12,7 @@ import (
 type AuthRepository interface {
 	CreateUser(user *users.User, auth *AuthProvider) error
 	UpdateUser(user *users.User, auth *AuthProvider) error
+	GetUserByUserID(id uint) (*users.User, error)
 	GetAuthByEmail(email string) (*AuthProvider, error)
 	GetUserByVerificationToken(tokenHash string) (*users.User, *AuthProvider, error)
 }
@@ -58,6 +59,7 @@ func (repo *authRepository) UpdateUser(user *users.User, auth *AuthProvider) err
 	}
 	defer tx.Rollback(ctx)
 	gs := pgx.NamedArgs{
+		"id":         user.ID,
 		"firstName":  user.FirstName,
 		"lastName":   user.LastName,
 		"email":      user.Email,
@@ -73,7 +75,7 @@ func (repo *authRepository) UpdateUser(user *users.User, auth *AuthProvider) err
 			image_url = @imageURL,
 			updated_at = @updatedAt,
 			is_verified = @isVerified
-		WHERE user_id = @userID
+		WHERE id = @id
 	`
 	_, err = tx.Exec(ctx, query, gs)
 	if err != nil {
@@ -84,6 +86,33 @@ func (repo *authRepository) UpdateUser(user *users.User, auth *AuthProvider) err
 		return err
 	}
 	return tx.Commit(ctx)
+}
+
+func (repo *authRepository) GetUserByUserID(id uint) (*users.User, error) {
+	ctx := context.Background()
+	gs := pgx.NamedArgs{
+		"userID": id,
+	}
+	query := `
+		SELECT id, first_name, last_name, email, image_url, created_at, updated_at, is_verified
+		FROM users
+		WHERE id = @userID
+	`
+	user := &users.User{}
+	err := repo.pool.QueryRow(ctx, query, gs).Scan(
+		&user.ID,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.ImageURL,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.IsVerified,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func (repo *authRepository) GetAuthByEmail(email string) (*AuthProvider, error) {
@@ -111,7 +140,7 @@ func (repo *authRepository) GetUserByVerificationToken(tokenHash string) (*users
 		"currentTime":           time.Now(),
 	}
 	query := `
-		SELECT user_id
+		SELECT id, user_id, provider, provider_user_id, password_hash, verification_token_hash, verification_token_expires_at, created_at
 		FROM auth_providers
 		WHERE verification_token_hash = @verificationTokenHash AND verification_token_expires_at > @currentTime
 		LIMIT 1
@@ -130,7 +159,7 @@ func (repo *authRepository) GetUserByVerificationToken(tokenHash string) (*users
 	if err != nil {
 		return nil, nil, err
 	}
-	user, err := repo.getUserByUserID(auth.UserID)
+	user, err := repo.GetUserByUserID(auth.UserID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -200,33 +229,6 @@ func (repo *authRepository) getAuthByUserID(userID uint, ctx context.Context) (*
 		return nil, err
 	}
 	return authProvider, nil
-}
-
-func (repo *authRepository) getUserByUserID(id uint) (*users.User, error) {
-	ctx := context.Background()
-	gs := pgx.NamedArgs{
-		"userID": id,
-	}
-	query := `
-		SELECT id, first_name, last_name, email, image_url, created_at, updated_at, is_verified
-		FROM users
-		WHERE id = @userID
-	`
-	user := &users.User{}
-	err := repo.pool.QueryRow(ctx, query, gs).Scan(
-		&user.ID,
-		&user.FirstName,
-		&user.LastName,
-		&user.Email,
-		&user.ImageURL,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-		&user.IsVerified,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
 }
 
 func NewAuthRepository(db *pgxpool.Pool) AuthRepository {

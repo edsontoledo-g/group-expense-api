@@ -33,7 +33,7 @@ func (s *tokenService) GenerateJWT(userID uint) (*TokenResult, error) {
 		"exp": time.Now().Add(exp).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signed, err := token.SignedString(os.Getenv("JWT_SECRET"))
+	signed, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
 		return nil, err
 	}
