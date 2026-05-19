@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -77,6 +78,9 @@ func (s *authService) SignUp(input *AuthInput) error {
 func (s *authService) SignIn(input *AuthInput) (*AuthResult, error) {
 	auth, err := s.repo.GetAuthByEmail(input.Email)
 	if err != nil {
+		if errors.Is(err, ErrUserNotFound) {
+			return nil, ErrInvalidCredentials
+		}
 		return nil, err
 	}
 	err = bcrypt.CompareHashAndPassword(
@@ -84,6 +88,9 @@ func (s *authService) SignIn(input *AuthInput) (*AuthResult, error) {
 		[]byte(input.Password),
 	)
 	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return nil, ErrInvalidCredentials
+		}
 		return nil, err
 	}
 	user, err := s.repo.GetUserByUserID(auth.UserID)
