@@ -1,14 +1,27 @@
 package auth
 
 import (
+	"embed"
 	"errors"
+	"html/template"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
+//go:embed templates/verify.html
+var templateFS embed.FS
+
+type verifyPageData struct {
+	Title       string
+	Message     string
+	StatusColor string
+	Icon        string
+}
+
 type AuthHandler struct {
-	s AuthService
+	s    AuthService
+	tmpl *template.Template
 }
 
 func (h *AuthHandler) SignUp(c *gin.Context) {
@@ -74,7 +87,6 @@ func (h *AuthHandler) SignInWithApple(c *gin.Context) {
 
 }
 
-// TODO: Move HTML content to a template and use redirect
 func (h *AuthHandler) Verify(c *gin.Context) {
 	token := c.Query("token")
 	err := h.s.VerifyUserEmail(token)
@@ -86,39 +98,27 @@ func (h *AuthHandler) Verify(c *gin.Context) {
 }
 
 func (h *AuthHandler) returnHTMLResult(c *gin.Context, success bool, message string) {
-	title := "Verification Error"
-	statusColor := "text-red-500"
-	icon := "❌"
+	data := verifyPageData{
+		Title:       "Verification Error",
+		StatusColor: "text-red-500",
+		Icon:        "❌",
+		Message:     message,
+	}
 	statusCode := http.StatusBadRequest
 	if success {
-		title = "All set!"
-		statusColor = "text-green-500"
-		icon = "✅"
+		data.Title = "All set!"
+		data.StatusColor = "text-green-500"
+		data.Icon = "✅"
 		statusCode = http.StatusOK
 	}
-	htmlTemplate := `
-	<!DOCTYPE html>
-	<html lang="es">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>` + title + `</title>
-		<script src="https://cdn.tailwindcss.com"></script>
-	</head>
-	<body class="bg-gray-50 flex items-center justify-center h-screen">
-		<div class="bg-white p-8 rounded-xl shadow-md max-w-md w-full text-center">
-			<div class="text-6xl mb-4">` + icon + `</div>
-			<h1 class="text-2xl font-bold mb-2 text-gray-800">` + title + `</h1>
-			<p class="text-gray-600 mb-6 ` + statusColor + ` font-medium">` + message + `</p>
-			<p class="text-xs text-gray-400">You can now close this tab and return to the app.</p>
-		</div>
-	</body>
-	</html>`
-	c.Data(statusCode, "text/html; charset=utf-8", []byte(htmlTemplate))
+	c.Status(statusCode)
+	h.tmpl.Execute(c.Writer, data)
 }
 
 func NewAuthHandler(s AuthService) *AuthHandler {
+	tmpl := template.Must(template.ParseFS(templateFS, "templates/verify.html"))
 	return &AuthHandler{
-		s: s,
+		s:    s,
+		tmpl: tmpl,
 	}
 }

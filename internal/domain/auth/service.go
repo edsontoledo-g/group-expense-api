@@ -20,6 +20,7 @@ type authService struct {
 	repo    AuthRepository
 	tokens  TokenService
 	mailing EmailService
+	baseURL string
 }
 
 type AuthInput struct {
@@ -66,11 +67,7 @@ func (s *authService) SignUp(input *AuthInput) error {
 	if err != nil {
 		return err
 	}
-	// TODO: Refactor hardcoded URL
-	verifyURL := fmt.Sprintf(
-		"http://localhost:8080/api/v1/auth/verify?token=%s",
-		token.Token,
-	)
+	verifyURL := fmt.Sprintf("%s/api/v1/auth/verify?token=%s", s.baseURL, token.Token)
 	err = s.mailing.SendVerificationEmail(user.Email, verifyURL)
 	return err
 }
@@ -128,10 +125,11 @@ func (s *authService) VerifyUserEmail(token string) error {
 	return err
 }
 
-func NewAuthService(repo AuthRepository, tokens TokenService, mailing EmailService) AuthService {
+func NewAuthService(repo AuthRepository, tokens TokenService, mailing EmailService, baseURL string) AuthService {
 	return &authService{
 		repo:    repo,
 		tokens:  tokens,
 		mailing: mailing,
+		baseURL: baseURL,
 	}
 }

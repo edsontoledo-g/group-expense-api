@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -17,7 +19,8 @@ func NewModule(db *pgxpool.Pool) *Module {
 	repo := NewAuthRepository(db)
 	tokens := NewTokenService()
 	mailing := NewEmailService()
-	service := NewAuthService(repo, tokens, mailing)
+	baseURL := os.Getenv("APP_BASE_URL")
+	service := NewAuthService(repo, tokens, mailing, baseURL)
 	handler := NewAuthHandler(service)
 	return &Module{
 		handler: handler,
