@@ -7,11 +7,16 @@ import (
 	"github.com/edsontoledo-g/group-expense-api/internal/domain/invites"
 	"github.com/edsontoledo-g/group-expense-api/internal/domain/users"
 	"github.com/edsontoledo-g/group-expense-api/internal/infra/db"
+	"github.com/edsontoledo-g/group-expense-api/internal/shared/templates"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	r := gin.Default()
+	tmpl := templates.Load(
+		auth.Templates(),
+	)
+	r.SetHTMLTemplate(tmpl)
 	v1 := r.Group("/api/v1")
 	pool := db.NewPostgresPool()
 	defer pool.Close()

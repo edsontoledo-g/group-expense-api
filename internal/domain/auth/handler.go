@@ -1,16 +1,11 @@
 package auth
 
 import (
-	"embed"
 	"errors"
-	"html/template"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-//go:embed templates/verify.html
-var templateFS embed.FS
 
 type verifyPageData struct {
 	Title       string
@@ -20,8 +15,7 @@ type verifyPageData struct {
 }
 
 type AuthHandler struct {
-	s    AuthService
-	tmpl *template.Template
+	s AuthService
 }
 
 func (h *AuthHandler) SignUp(c *gin.Context) {
@@ -111,14 +105,11 @@ func (h *AuthHandler) returnHTMLResult(c *gin.Context, success bool, message str
 		data.Icon = "✅"
 		statusCode = http.StatusOK
 	}
-	c.Status(statusCode)
-	h.tmpl.Execute(c.Writer, data)
+	c.HTML(statusCode, "auth_verify.html", data)
 }
 
 func NewAuthHandler(s AuthService) *AuthHandler {
-	tmpl := template.Must(template.ParseFS(templateFS, "templates/verify.html"))
 	return &AuthHandler{
-		s:    s,
-		tmpl: tmpl,
+		s: s,
 	}
 }
